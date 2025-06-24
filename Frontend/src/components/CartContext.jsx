@@ -1,4 +1,10 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 
 const CartContext = createContext();
 
@@ -7,17 +13,25 @@ export function CartProvider({ children }) {
 
   // Cargar carrito desde localStorage al iniciar
   useEffect(() => {
-    const savedCart = localStorage.getItem("cart");
-    if (savedCart) setCart(JSON.parse(savedCart));
+    try {
+      const savedCart = localStorage.getItem("cart");
+      if (savedCart) setCart(JSON.parse(savedCart));
+    } catch (error) {
+      console.error("Error al cargar el carrito desde localStorage:", error);
+    }
   }, []);
 
   // Guardar carrito en localStorage cuando cambie
   useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cart));
+    try {
+      localStorage.setItem("cart", JSON.stringify(cart));
+    } catch (error) {
+      console.error("Error al guardar el carrito en localStorage:", error);
+    }
   }, [cart]);
 
   // Añadir al carrito (aumenta cantidad si ya existe)
-  const addToCart = (producto) => {
+  const addToCart = useCallback((producto) => {
     setCart((prevCart) => {
       const existe = prevCart.find((p) => p.idProducto === producto.idProducto);
       if (existe) {
@@ -30,21 +44,22 @@ export function CartProvider({ children }) {
         return [...prevCart, { ...producto, cantidad: 1 }];
       }
     });
-  };
+  }, []);
 
   // Eliminar del carrito
-  const removeFromCart = (idProducto) => {
+  const removeFromCart = useCallback((idProducto) => {
     setCart((prevCart) => prevCart.filter((p) => p.idProducto !== idProducto));
-  };
+  }, []);
 
   // Actualizar cantidad
-  const updateQuantity = (idProducto, cantidad) => {
+  const updateQuantity = useCallback((idProducto, cantidad) => {
+    if (cantidad < 1) return; // Evitar cantidades menores a 1
     setCart((prevCart) =>
       prevCart.map((p) =>
         p.idProducto === idProducto ? { ...p, cantidad } : p
       )
     );
-  };
+  }, []);
 
   // Cantidad total de productos en el carrito
   const cartCount = cart.reduce((acc, p) => acc + p.cantidad, 0);
@@ -53,10 +68,10 @@ export function CartProvider({ children }) {
   const cartTotal = cart.reduce((acc, p) => acc + p.precio * p.cantidad, 0);
 
   // Limpiar el carrito
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     setCart([]);
     localStorage.removeItem("cart");
-  };
+  }, []);
 
   return (
     <CartContext.Provider

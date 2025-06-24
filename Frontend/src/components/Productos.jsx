@@ -30,7 +30,6 @@ function Productos() {
   };
 
   const generoId = generos[location.pathname];
-  console.log("Ruta:", location.pathname, "GeneroId:", generoId);
 
   const productosFiltrados = generoId
     ? productos.filter((p) => p.genero && p.genero.idGenero === generoId)
@@ -57,12 +56,12 @@ function Productos() {
       {productosFiltrados.map((producto) => (
         <div
           key={producto.idProducto}
-          className="bg-white rounded shadow p-4 flex flex-col items-center min-h-[320px]" // altura mínima para uniformidad
+          className="bg-white rounded-lg shadow-lg transition-transform transform hover:scale-105 p-4 flex flex-col items-center min-h-[320px] border border-gray-200"
         >
           <img
             src={`http://localhost:8080${producto.imgProducto}`}
             alt={producto.nombre}
-            className="w-32 h-32 object-cover mb-4"
+            className="w-32 h-32 object-cover mb-4 rounded-lg shadow-md"
           />
           <h3
             className="font-semibold text-base mb-2 text-center line-clamp-2"
@@ -72,18 +71,44 @@ function Productos() {
               WebkitBoxOrient: "vertical",
               overflow: "hidden",
               textOverflow: "ellipsis",
-              minHeight: "40px", // un poco más de espacio para 2 líneas
+              minHeight: "40px",
             }}
             title={producto.nombre}
           >
             {producto.nombre}
           </h3>
-          <span className="text-gray-700 mb-2">${producto.precio}</span>
+          <span className="text-gray-700 mb-2 font-medium">
+            ${producto.precio}
+          </span>
           <button
-            className="bg-black text-white px-4 py-1 rounded hover:bg-gray-800 transition"
             onClick={() => addToCart(producto)}
+            className="mt-auto w-full bg-black text-white px-4 py-3 rounded-md  transition-all duration-300 flex items-center justify-center space-x-2 border border-black  group"
           >
-            Añadir al carrito
+            {/* Icono del carrito con efecto hover */}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5 group-hover:rotate-[-10deg] transition-transform duration-300"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+              />
+            </svg>
+
+            {/* Texto con efecto de movimiento */}
+            <span className="relative overflow-hidden block">
+              <span className="block group-hover:translate-y-[-100%] transition-transform duration-300">
+                Añadir al carrito
+              </span>
+              <span className="absolute top-full left-0 w-full text-center block group-hover:translate-y-[-100%] transition-transform duration-300">
+                Añadir al carrito
+              </span>
+            </span>
           </button>
         </div>
       ))}

@@ -1,14 +1,27 @@
 import { useCart } from "./CartContext.jsx";
+import { useAuth } from "./AuthContext.jsx";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Carrito() {
-  const { cart, removeFromCart, updateQuantity, cartTotal } = useCart();
+  const { cart, removeFromCart, updateQuantity, cartTotal, clearCart } =
+    useCart();
+  const { user } = useAuth();
   const [metodoPago, setMetodoPago] = useState("");
   const [aceptaTerminos, setAceptaTerminos] = useState(false);
   const [enviarBoletaWhatsapp, setEnviarBoletaWhatsapp] = useState(false);
   const [mensaje, setMensaje] = useState("");
+  const [facturaId, setFacturaId] = useState(null);
+  const navigate = useNavigate();
 
-  const handlePago = () => {
+  const carritoVacio = cart.length === 0;
+
+  const handlePago = async () => {
+    if (!user) {
+      setMensaje("Debes iniciar sesión para realizar la compra.");
+      setTimeout(() => navigate("/login"), 1500);
+      return;
+    }
     if (!aceptaTerminos) {
       setMensaje("Debes aceptar los Términos y Condiciones.");
       return;
@@ -17,19 +30,36 @@ function Carrito() {
       setMensaje("Selecciona un método de pago.");
       return;
     }
-    setMensaje("");
-    if (enviarBoletaWhatsapp) {
-      setMensaje("¡La boleta será enviada a tu WhatsApp registrado!");
-    } else {
-      setMensaje("¡Pago procesado correctamente!");
+
+    try {
+      const res = await fetch("http://localhost:8080/api/compra/realizar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          idCliente: user.idCliente,
+          total: cartTotal,
+          productos: cart.map((p) => ({
+            idProducto: p.idProducto,
+            cantidad: p.cantidad,
+            precioUnitario: p.precio,
+          })),
+        }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setMensaje("¡Compra registrada correctamente!");
+        setFacturaId(data.id_factura); // Guardar el id_factura para la boleta
+        clearCart();
+      } else {
+        setMensaje("Error al registrar la compra.");
+        setFacturaId(null);
+      }
+    } catch (err) {
+      setMensaje("Error de conexión con el servidor.", err);
+      setFacturaId(null);
     }
   };
 
-  if (cart.length === 0) {
-    return <div className="text-center py-10">Tu carrito está vacío.</div>;
-  }
-
-  // Métodos de pago como array para mapear
   const metodos = [
     {
       id: "paypal",
@@ -60,59 +90,65 @@ function Carrito() {
         className="flex-1 bg-white shadow p-6 max-h-[80vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
         style={{ border: "none", borderRadius: 0, scrollBehavior: "smooth" }}
       >
-        <h2 className="text-2xl font-bold mb-6">Carrito de compras</h2>
-        {cart.map((producto) => (
-          <div
-            key={producto.idProducto}
-            className="flex items-center gap-4 mb-4 border-b pb-4"
-          >
-            <img
-              src={`http://localhost:8080${producto.imgProducto}`}
-              alt={producto.nombre}
-              className="w-20 h-20 object-cover"
-            />
-            <div className="flex-1">
-              <div className="flex justify-between items-center">
-                <h3 className="font-semibold truncate max-w-xs">
-                  {producto.nombre}
-                </h3>
-                <span className="text-gray-700 ml-4 min-w-[80px] text-right">
-                  S/. {producto.precio}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 mt-2">
-                <button
-                  onClick={() =>
-                    updateQuantity(producto.idProducto, producto.cantidad - 1)
-                  }
-                  className="px-2 border rounded"
-                >
-                  -
-                </button>
-                <span>{producto.cantidad}</span>
-                <button
-                  onClick={() =>
-                    updateQuantity(producto.idProducto, producto.cantidad + 1)
-                  }
-                  className="px-2 border rounded"
-                >
-                  +
-                </button>
-                <button
-                  onClick={() => removeFromCart(producto.idProducto)}
-                  className="ml-4"
-                  title="Eliminar"
-                >
-                  <img
-                    src="https://cdn-icons-png.flaticon.com/512/1214/1214428.png"
-                    alt="Eliminar"
-                    className="w-6 h-6"
-                  />
-                </button>
+        <h2 className="text-2xl mb-6">Carrito de compras</h2>
+        {carritoVacio ? (
+          <div className="text-center py-20 text-gray-500 text-lg font-semibold">
+            Tu carrito está vacío
+          </div>
+        ) : (
+          cart.map((producto) => (
+            <div
+              key={producto.idProducto}
+              className="flex items-center gap-4 mb-4 border-b pb-4"
+            >
+              <img
+                src={`http://localhost:8080${producto.imgProducto}`}
+                alt={producto.nombre}
+                className="w-20 h-20 object-cover"
+              />
+              <div className="flex-1">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-semibold truncate max-w-xs">
+                    {producto.nombre}
+                  </h3>
+                  <span className="text-gray-700 ml-4 min-w-[80px] text-right">
+                    S/. {producto.precio}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                  <button
+                    onClick={() =>
+                      updateQuantity(producto.idProducto, producto.cantidad - 1)
+                    }
+                    className="px-2 border rounded"
+                  >
+                    -
+                  </button>
+                  <span>{producto.cantidad}</span>
+                  <button
+                    onClick={() =>
+                      updateQuantity(producto.idProducto, producto.cantidad + 1)
+                    }
+                    className="px-2 border rounded"
+                  >
+                    +
+                  </button>
+                  <button
+                    onClick={() => removeFromCart(producto.idProducto)}
+                    className="ml-4"
+                    title="Eliminar"
+                  >
+                    <img
+                      src="https://cdn-icons-png.flaticon.com/512/1214/1214428.png"
+                      alt="Eliminar"
+                      className="w-6 h-6"
+                    />
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </section>
 
       {/* Resumen y métodos de pago */}
@@ -130,19 +166,28 @@ function Carrito() {
               <button
                 key={metodo.id}
                 type="button"
-                onClick={() => setMetodoPago(metodo.id)}
+                onClick={() => !carritoVacio && setMetodoPago(metodo.id)}
                 className={`p-1 rounded transition border-2 focus:outline-none ${
-                  metodoPago === metodo.id
+                  metodoPago === metodo.id && !carritoVacio
                     ? "border-black shadow-lg"
-                    : "border-transparent opacity-60 hover:opacity-100"
+                    : "border-transparent opacity-60"
                 }`}
-                style={{ background: "white" }}
+                style={{
+                  background: "white",
+                  pointerEvents: carritoVacio ? "none" : "auto",
+                  opacity: carritoVacio ? 0.4 : 1,
+                  cursor: carritoVacio ? "not-allowed" : "pointer",
+                }}
                 aria-label={metodo.alt}
+                disabled={carritoVacio}
               >
                 <img
                   src={metodo.img}
                   alt={metodo.alt}
                   className="w-12 h-12 object-contain"
+                  style={{
+                    filter: carritoVacio ? "grayscale(1)" : "none",
+                  }}
                 />
               </button>
             ))}
@@ -154,8 +199,9 @@ function Carrito() {
               checked={aceptaTerminos}
               onChange={() => setAceptaTerminos(!aceptaTerminos)}
               className="mr-2"
+              disabled={carritoVacio}
             />
-            <label htmlFor="aceptaTerminos" className="text-sm">
+            <label htmlFor="aceptaTerminos" className="text-sm select-none">
               Acepto los{" "}
               <a href="#" className="underline">
                 Términos y Condiciones
@@ -170,14 +216,23 @@ function Carrito() {
               checked={enviarBoletaWhatsapp}
               onChange={() => setEnviarBoletaWhatsapp(!enviarBoletaWhatsapp)}
               className="mr-2"
+              disabled={carritoVacio}
             />
-            <label htmlFor="enviarBoletaWhatsapp" className="text-sm">
+            <label
+              htmlFor="enviarBoletaWhatsapp"
+              className="text-sm select-none"
+            >
               Quiero recibir la boleta por WhatsApp
             </label>
           </div>
           <button
             onClick={handlePago}
             className="w-full bg-black text-white py-3 rounded font-bold text-lg hover:bg-gray-800 transition"
+            disabled={carritoVacio}
+            style={{
+              opacity: carritoVacio ? 0.5 : 1,
+              cursor: carritoVacio ? "not-allowed" : "pointer",
+            }}
           >
             PROCEDER AL PAGO
           </button>
@@ -185,6 +240,18 @@ function Carrito() {
             <div className="mt-4 text-center text-green-600 font-semibold">
               {mensaje}
             </div>
+          )}
+
+          {/* Botón para descargar la boleta PDF */}
+          {facturaId && (
+            <a
+              href={`http://localhost:8080/api/boleta/${facturaId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block mt-4 text-center bg-green-600 text-white py-2 rounded font-semibold hover:bg-green-700 transition"
+            >
+              Descargar boleta PDF
+            </a>
           )}
 
           <div className="text-xs text-gray-500 mt-4">

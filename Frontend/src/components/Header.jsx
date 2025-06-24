@@ -12,8 +12,8 @@ function Header() {
   };
 
   return (
-    <header className="w-full bg-white border-b sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-2">
+    <header className="w-full bg-white border-b shadow-md sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-3">
         {/* Logo y menú */}
         <div className="flex items-center gap-4">
           <button className="md:hidden p-2">
@@ -35,17 +35,29 @@ function Header() {
         </div>
 
         {/* Navegación */}
-        <nav className="hidden md:flex flex-1 justify-center gap-10 font-sans ">
-          <Link to="/mujer" className="font-bold text-black hover:underline">
+        <nav className="hidden md:flex flex-1 justify-center gap-10 font-sans">
+          <Link
+            to="/hombre"
+            className="font-bold text-black hover:text-gray-800 transition-colors duration-200"
+          >
             HOMBRE
           </Link>
-          <Link to="/hombre" className="text-gray-700 hover:underline">
+          <Link
+            to="/mujer"
+            className="text-gray-700 hover:text-gray-900 transition-colors duration-200"
+          >
             MUJER
           </Link>
-          <Link to="/ninos" className="text-gray-700 hover:underline">
+          <Link
+            to="/ninos"
+            className="text-gray-700 hover:text-gray-900 transition-colors duration-200"
+          >
             NIÑOS
           </Link>
-          <Link to="/" className="text-gray-700 hover:underline">
+          <Link
+            to="/"
+            className="text-gray-700 hover:text-gray-900 transition-colors duration-200"
+          >
             HOME
           </Link>
         </nav>

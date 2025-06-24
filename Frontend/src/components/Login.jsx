@@ -34,6 +34,7 @@ function Login() {
         }
 
         const userData = await response.json();
+        console.log("userData recibido del backend:", userData);
         login(userData);
         navigate("/");
       } catch (err) {

@@ -34,7 +34,7 @@ Tienda-HyM/
 ## Frontend
 
 ```bash
-`cd frontend`
+cd frontend
 npm install
 npm run dev
 servidor: http://localhost:5173

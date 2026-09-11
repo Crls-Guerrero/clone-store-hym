@@ -9,6 +9,15 @@ Aplicación Full Stack desarrollada con React, Spring Boot y SQL Server.
 - Node.js 22+
 - SQL Server (local o remoto) + SSMS
 
+## Estructura del proyecto
+
+Tienda-HyM/
+├── frontend/ # React + Vite + Tailwind
+├── Backend-TiendaHyM/ # Spring Boot + JPA
+├── database/
+│ └── TiendaHYM.sql # Script completo (estructura + datos)
+└── README.md
+
 ## Configuración de la base de datos
 
 1. Abre SSMS y ejecuta el script `database/TiendaHYM.sql` — crea la base `TiendaHYM`, sus tablas, relaciones y datos de ejemplo.
@@ -21,15 +30,6 @@ El backend no usa credenciales hardcodeadas. Antes de correrlo:
 2. Reemplaza los valores con tu configuración local de SQL Server:
 
 El `.env` se lee automáticamente gracias a la dependencia `spring-dotenv` (ver `pom.xml`). `.env` nunca se sube a Git (está en `.gitignore`); solo `.env.example` queda como plantilla.
-
-## Estructura del proyecto
-
-Tienda-HyM/
-├── frontend/ # React + Vite + Tailwind
-├── Backend-TiendaHyM/ # Spring Boot + JPA
-├── database/
-│ └── TiendaHYM.sql # Script completo (estructura + datos)
-└── README.md
 
 ## Frontend
 
